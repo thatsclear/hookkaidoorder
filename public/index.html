@@ -399,8 +399,7 @@ let cart = [];
 let detailItem = null;
 let detailFlavour = null;
 let detailSize = null;
-let detailQty = null;        // for fixed qtyOptions (legacy)
-let detailFreeQty = 1;       // for qtyPricing (free-form counter)
+let detailQty = null;
 
 const params = new URLSearchParams(window.location.search);
 const tableKey = (params.get('stol') || 'obraz').toLowerCase().replace(/[\s-]/g, '');
@@ -477,14 +476,8 @@ function itemMinPrice(item) {
   if (item.price !== undefined) return item.price;
   if (item.sizes) return Math.min(...item.sizes.map(s => s.price));
   if (item.qtyOptions) return item.qtyOptions[0].price;
-  if (item.qtyPricing) return item.qtyPricing.single; // 1 ks
+  if (item.qtyPricing) return item.qtyPricing.single;
   return 0;
-}
-// Pair-discount price: pairs cost p.pair, leftover cost p.single
-function calcPairPrice(qty, p) {
-  const pairs = Math.floor(qty / 2);
-  const leftover = qty % 2;
-  return pairs * p.pair + leftover * p.single;
 }
 function itemHasOptions(item) { return !!(item.flavours || item.sizes || item.qtyOptions || item.qtyPricing); }
 function cartQuantityForItem(item) { return cart.filter(c => c.itemId === item.id).reduce((s, c) => s + c.qty, 0); }
@@ -567,6 +560,24 @@ function renderMenu() {
   el.innerHTML = html;
 }
 
+// Macaron group discount: every 2 pcs save 40 Kč (95+95=190 → 150).
+// Counts ALL macarons in cart across flavours.
+function macaronCount() {
+  return cart.filter(c => {
+    const item = MENU.find(m => m.id === c.itemId);
+    return item && item.qtyPricing;
+  }).reduce((s, c) => s + c.qty, 0);
+}
+function macaronDiscount() {
+  const n = macaronCount();
+  const item = MENU.find(m => m.qtyPricing);
+  if (!item) return 0;
+  const pairs = Math.floor(n / 2);
+  return pairs * (item.qtyPricing.single * 2 - item.qtyPricing.pair);
+}
+function cartSubtotal() { return cart.reduce((s, c) => s + c.price * c.qty, 0); }
+function cartTotal() { return cartSubtotal() - macaronDiscount(); }
+
 function makeCartKey(itemId, variant) {
   return itemId + (variant ? '|' + JSON.stringify(variant) : '');
 }
@@ -588,7 +599,7 @@ function changeCartQty(key, delta) {
 }
 function updateCartBar() {
   const count = cart.reduce((s, c) => s + c.qty, 0);
-  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const total = cartTotal();
   document.getElementById('cart-bar').classList.toggle('hidden', count === 0);
   document.getElementById('cart-count').textContent = count;
   document.getElementById('cart-bar-total').textContent = total + ' Kč';
@@ -618,8 +629,20 @@ function renderCartSheet() {
       <span class="cart-item-price">${c.price * c.qty}&nbsp;Kč</span>
     </div>`;
   }).join('');
-  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
-  document.getElementById('cart-items').innerHTML = rows;
+
+  const discount = macaronDiscount();
+  const total = cartTotal();
+  const discountLine = discount > 0
+    ? `<div class="cart-item" style="border-bottom:none;padding-top:14px">
+         <div class="cart-item-info">
+           <div class="cart-item-name" style="color:var(--accent)">${ {cs:'Sleva za macarons',en:'Macarons discount',ru:'Скидка на макаруны'}[lang] }</div>
+           <div class="cart-item-variant">${ {cs:'každé 2 ks za 150 Kč',en:'every 2 pcs for 150 Kč',ru:'каждые 2 шт за 150 Kč'}[lang] }</div>
+         </div>
+         <span class="cart-item-price" style="color:var(--accent)">−${discount}&nbsp;Kč</span>
+       </div>`
+    : '';
+
+  document.getElementById('cart-items').innerHTML = rows + discountLine;
   document.getElementById('cart-total-amount').textContent = total + ' Kč';
   document.getElementById('cart-sub').textContent = i.tl + ': ' + getTableName();
   document.getElementById('order-result').innerHTML = '';
@@ -633,20 +656,15 @@ function openDetail(id) {
   detailFlavour = null;
   detailSize = (detailItem.sizes && detailItem.sizes.length) ? detailItem.sizes[0] : null;
   detailQty = (detailItem.qtyOptions && detailItem.qtyOptions.length) ? detailItem.qtyOptions[0] : null;
-  detailFreeQty = 1;
   renderDetail();
   document.getElementById('detail-overlay').classList.add('open');
 }
 function selectFlavour(id) { detailFlavour = detailItem.flavours.find(f => f.id === id); renderDetail(); }
 function selectSize(idx) { detailSize = detailItem.sizes[idx]; renderDetail(); }
 function selectQty(idx) { detailQty = detailItem.qtyOptions[idx]; renderDetail(); }
-function changeFreeQty(delta) {
-  detailFreeQty = Math.max(1, Math.min(99, detailFreeQty + delta));
-  renderDetail();
-}
 function detailCurrentPrice() {
   if (!detailItem) return 0;
-  if (detailItem.qtyPricing) return calcPairPrice(detailFreeQty, detailItem.qtyPricing);
+  if (detailItem.qtyPricing) return detailItem.qtyPricing.single;
   if (detailQty) return detailQty.price;
   if (detailSize) return detailSize.price;
   return detailItem.price || 0;
@@ -703,20 +721,13 @@ function renderDetail() {
     opts += `</div></div>`;
   }
   if (it.qtyPricing) {
-    const fullPrice = detailFreeQty * it.qtyPricing.single;
-    const realPrice = calcPairPrice(detailFreeQty, it.qtyPricing);
-    const savings = fullPrice - realPrice;
-    const savingsLine = savings > 0
-      ? `<div class="opt-detail" style="color:var(--accent);font-weight:500;margin-top:6px">${ {cs:'Sleva',en:'Discount',ru:'Скидка'}[lang] }: −${savings} Kč</div>`
-      : '';
+    const hint = {
+      cs: `Cena: ${it.qtyPricing.single} Kč / ks · Každé 2 ks za ${it.qtyPricing.pair} Kč`,
+      en: `Price: ${it.qtyPricing.single} Kč each · Every 2 pcs for ${it.qtyPricing.pair} Kč`,
+      ru: `Цена: ${it.qtyPricing.single} Kč / шт · Каждые 2 шт за ${it.qtyPricing.pair} Kč`,
+    }[lang];
     opts += `<div class="opt-group">
-      <div class="opt-label">${i.selectQty}</div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:18px;background:var(--surface);border:0.5px solid var(--line);border-radius:10px;padding:14px">
-        <button class="qty-btn" onclick="changeFreeQty(-1)" ${detailFreeQty <= 1 ? 'disabled style="opacity:0.4"' : ''}>−</button>
-        <span style="font-size:22px;font-weight:600;min-width:30px;text-align:center">${detailFreeQty}</span>
-        <button class="qty-btn" onclick="changeFreeQty(1)">+</button>
-      </div>
-      ${savingsLine}
+      <div class="opt-detail" style="background:var(--accent-soft);color:var(--accent);padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.5;margin-top:0">${hint}</div>
     </div>`;
   }
   document.getElementById('d-options').innerHTML = opts;
@@ -732,16 +743,7 @@ function addFromDetail() {
   if (detailSize) variant.size = detailSize.label;
   if (detailQty) variant.qty = detailQty.qty;
   const v = Object.keys(variant).length ? variant : null;
-
-  if (detailItem.qtyPricing) {
-    // Pair-discount: add as 1 line with the pre-discounted total as "price" and qty=1
-    // so the cart math stays consistent. Show "X ks" in variant text.
-    const totalPrice = calcPairPrice(detailFreeQty, detailItem.qtyPricing);
-    const variantWithCount = { ...(v || {}), count: detailFreeQty };
-    addToCart(detailItem, variantWithCount, totalPrice, 1);
-  } else {
-    addToCart(detailItem, v, detailCurrentPrice(), 1);
-  }
+  addToCart(detailItem, v, detailCurrentPrice(), 1);
   document.getElementById('detail-overlay').classList.remove('open');
   detailItem = null;
 }
@@ -754,11 +756,13 @@ async function sendOrder() {
     const v = c.variant ? ' (' + variantText(c.variant) + ')' : '';
     return `${c.qty}× ${c.name.cs}${v} — ${c.price * c.qty} Kč`;
   }).join('\n');
-  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const discount = macaronDiscount();
+  const discountStr = discount > 0 ? `\nSleva za macarons: −${discount} Kč` : '';
+  const total = cartTotal();
   const now = new Date();
   const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
   const comment = document.getElementById('comment-input').value.trim();
-  const message = `🆕 Objednávka — ${getTableName()} (${getTableInternal()})\n─────────────────\n${lines}\n─────────────────\nCelkem: ${total} Kč\nČas: ${time}${comment ? '\nKomentář: ' + comment : ''}`;
+  const message = `🆕 Objednávka — ${getTableName()} (${getTableInternal()})\n─────────────────\n${lines}${discountStr}\n─────────────────\nCelkem: ${total} Kč\nČas: ${time}${comment ? '\nKomentář: ' + comment : ''}`;
   try {
     const res = await fetch('/api/order', {
       method: 'POST',
