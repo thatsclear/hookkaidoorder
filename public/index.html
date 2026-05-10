@@ -303,8 +303,8 @@ const MENU = [
   // 7 — Káva
   {id:'c1',cat:7,name:{cs:'Cà Phê Phin (0.45l)',en:'Cà Phê Phin (0.45l)',ru:'Cà Phê Phin (0.45l)'},desc:{cs:'Vietnamská filtrovaná káva — horká nebo s ledem',en:'Vietnamese filter coffee — hot or iced',ru:'Вьетнамский фильтр-кофе — горячий или со льдом'},price:100},
 
-  // 8 — Dezerty (Macarons) — free quantity, pair-discount pricing
-  {id:'mac',cat:8,name:{cs:'Macarons',en:'Macarons',ru:'Макаруны'},desc:{cs:'1 ks za 95 Kč · 2 ks za 150 Kč',en:'1 pc for 95 Kč · 2 pcs for 150 Kč',ru:'1 шт — 95 Kč · 2 шт — 150 Kč'},
+  // 8 — Dezerty (Macarons) — pair-pricing: 1 ks 95 Kč, 2+ ks 75 Kč each
+  {id:'mac',cat:8,name:{cs:'Macarons',en:'Macarons',ru:'Макаруны'},desc:{cs:'1 ks za 95 Kč · od 2 ks za 75 Kč / ks',en:'1 pc for 95 Kč · 2+ pcs for 75 Kč each',ru:'1 шт — 95 Kč · от 2 шт — 75 Kč / шт'},
     flavours:[
       {id:'karamel',name:{cs:'Slaný karamel',en:'Salted caramel',ru:'Солёная карамель'}},
       {id:'limetka',name:{cs:'Limetka & bazalka',en:'Lime & basil',ru:'Лайм и базилик'}},
@@ -312,7 +312,7 @@ const MENU = [
       {id:'levandule',name:{cs:'Levandule',en:'Lavender',ru:'Лаванда'}},
       {id:'mango',name:{cs:'Mango & passion fruit',en:'Mango & passion fruit',ru:'Манго и маракуйя'}},
     ],
-    qtyPricing:{single:95,pair:150}},
+    qtyPricing:{single:95,bulk:75}},
 
   // 9 — Pivo
   {id:'b0',cat:9,name:{cs:'Asahi Super Dry (0.33l)',en:'Asahi Super Dry (0.33l)',ru:'Asahi Super Dry (0.33l)'},desc:{cs:'Lehké suché japonské pivo',en:'Light dry Japanese beer',ru:'Лёгкое сухое японское пиво'},price:69},
@@ -356,6 +356,43 @@ const MENU = [
   // 13 — Vodní dýmka
   {id:'h1',cat:13,name:{cs:'Omakase vodní dýmka',en:'Omakase hookah',ru:'Кальян Omakase'},desc:{cs:'Světlý nebo tmavý tabák, příprava omakase',en:'Light or dark tobacco, omakase prep',ru:'Светлый или тёмный табак, подготовка омакасе'},price:500},
   {id:'h2',cat:13,name:{cs:'Repack',en:'Repack',ru:'Репак'},desc:{cs:'Výměna tabáku ve vaší dýmce',en:'Tobacco refill for your hookah',ru:'Замена табака в вашем кальяне'},price:200,restriction:'workandsmoke'},
+
+  // 14 — Pizza (partner)
+  // Classic 30-32 cm
+  {id:'p1',cat:14,subcat:'classic',name:{cs:'Margherita',en:'Margherita',ru:'Margherita'},desc:{cs:'Drcená rajčata Pelati Interi, mozzarella Fior di Latte, bazalka, olivový olej',en:'Crushed Pelati Interi tomatoes, Fior di Latte mozzarella, basil, olive oil',ru:'Томаты Pelati Interi, моцарелла Fior di Latte, базилик, оливковое масло'},price:275},
+  {id:'p2',cat:14,subcat:'classic',name:{cs:'Funghi',en:'Funghi',ru:'Funghi'},desc:{cs:'Pelati Interi, Fior di Latte, žampiony, olivový olej',en:'Pelati Interi, Fior di Latte, mushrooms, olive oil',ru:'Pelati Interi, Fior di Latte, шампиньоны, оливковое масло'},price:290},
+  {id:'p3',cat:14,subcat:'classic',name:{cs:'Vegeteriana',en:'Vegeteriana',ru:'Vegeteriana'},desc:{cs:'Pelati Interi, Fior di Latte, kukuřice, paprika, cibule, žampiony, olivy',en:'Pelati Interi, Fior di Latte, corn, pepper, onion, mushrooms, olives',ru:'Pelati Interi, Fior di Latte, кукуруза, перец, лук, шампиньоны, оливки'},price:305},
+  {id:'p4',cat:14,subcat:'classic',name:{cs:'Tonno (Tuňák)',en:'Tonno (Tuna)',ru:'Tonno (Тунец)'},desc:{cs:'Pelati Interi, Fior di Latte, tuňák, červená cibule, sušená rajčata, bazalka',en:'Pelati Interi, Fior di Latte, tuna, red onion, sun-dried tomatoes, basil',ru:'Pelati Interi, Fior di Latte, тунец, красный лук, вяленые томаты, базилик'},price:315},
+  {id:'p5',cat:14,subcat:'classic',name:{cs:'Prosciutto Classico',en:'Prosciutto Classico',ru:'Prosciutto Classico'},desc:{cs:'Pelati Interi, Fior di Latte, šunka od kosti, Grana Padano',en:'Pelati Interi, Fior di Latte, bone-in ham, Grana Padano',ru:'Pelati Interi, Fior di Latte, окорок на кости, Grana Padano'},price:315},
+  {id:'p6',cat:14,subcat:'classic',name:{cs:'Pollo Spinaci',en:'Pollo Spinaci',ru:'Pollo Spinaci'},desc:{cs:'Smetanový základ, Fior di Latte, kuřecí maso, špenát, česnek',en:'Cream base, Fior di Latte, chicken, spinach, garlic',ru:'Сливочная основа, Fior di Latte, курица, шпинат, чеснок'},price:315},
+  {id:'p7',cat:14,subcat:'classic',name:{cs:'Hawaii',en:'Hawaii',ru:'Hawaii'},desc:{cs:'Pelati Interi, Fior di Latte, šunka od kosti, ananas',en:'Pelati Interi, Fior di Latte, bone-in ham, pineapple',ru:'Pelati Interi, Fior di Latte, окорок, ананас'},price:315},
+  {id:'p8',cat:14,subcat:'classic',name:{cs:'Mexicana',en:'Mexicana',ru:'Mexicana'},desc:{cs:'Pelati Interi, Fior di Latte, salame Spianata, červená cibule, paprika, kukuřice',en:'Pelati Interi, Fior di Latte, Spianata salami, red onion, pepper, corn',ru:'Pelati Interi, Fior di Latte, салями Spianata, красный лук, перец, кукуруза'},price:325},
+  {id:'p9',cat:14,subcat:'classic',name:{cs:'Bianca Piccante',en:'Bianca Piccante',ru:'Bianca Piccante'},desc:{cs:'Smetana, Fior di Latte, salám Napoli, jalapeño, červená cibule, kukuřice',en:'Cream, Fior di Latte, Napoli salami, jalapeño, red onion, corn',ru:'Сливки, Fior di Latte, салями Napoli, халапеньо, красный лук, кукуруза'},price:325},
+  {id:'p10',cat:14,subcat:'classic',name:{cs:'Capricciosa',en:'Capricciosa',ru:'Capricciosa'},desc:{cs:'Pelati Interi, Fior di Latte, žampiony, šunka od kosti, olivy',en:'Pelati Interi, Fior di Latte, mushrooms, bone-in ham, olives',ru:'Pelati Interi, Fior di Latte, шампиньоны, окорок, оливки'},price:325},
+  {id:'p11',cat:14,subcat:'classic',name:{cs:'Salame',en:'Salame',ru:'Salame'},desc:{cs:'Pelati Interi, Grana Padano, Fior di Latte, italský salám Napoli',en:'Pelati Interi, Grana Padano, Fior di Latte, Italian Napoli salami',ru:'Pelati Interi, Grana Padano, Fior di Latte, итальянская салями Napoli'},price:325},
+  {id:'p12',cat:14,subcat:'classic',name:{cs:'Salame Piccante',en:'Salame Piccante',ru:'Salame Piccante'},desc:{cs:'Pelati Interi, Grana Padano, Fior di Latte, pikantní salám Spianata',en:'Pelati Interi, Grana Padano, Fior di Latte, spicy Spianata salami',ru:'Pelati Interi, Grana Padano, Fior di Latte, острая салями Spianata'},price:325},
+  {id:'p13',cat:14,subcat:'classic',name:{cs:'Diavola',en:'Diavola',ru:'Diavola'},desc:{cs:'Pelati Interi, Fior di Latte, salám Spianata, pálivá paprička, Grana Padano',en:'Pelati Interi, Fior di Latte, Spianata salami, hot pepper, Grana Padano',ru:'Pelati Interi, Fior di Latte, салями Spianata, острый перец, Grana Padano'},price:325},
+  {id:'p14',cat:14,subcat:'classic',name:{cs:'Quattro Formaggi',en:'Quattro Formaggi',ru:'Quattro Formaggi'},desc:{cs:'Smetana, Fior di Latte, gorgonzola, Grana Padano, scamorza, oregano',en:'Cream, Fior di Latte, gorgonzola, Grana Padano, scamorza, oregano',ru:'Сливки, Fior di Latte, горгонзола, Grana Padano, скаморца, орегано'},price:325},
+  {id:'p15',cat:14,subcat:'classic',name:{cs:'Pollo Funghi',en:'Pollo Funghi',ru:'Pollo Funghi'},desc:{cs:'Pelati Interi, Fior di Latte, kuřecí maso, žampiony, červená cibule, Grana Padano',en:'Pelati Interi, Fior di Latte, chicken, mushrooms, red onion, Grana Padano',ru:'Pelati Interi, Fior di Latte, курица, шампиньоны, красный лук, Grana Padano'},price:325},
+
+  // Premium
+  {id:'p16',cat:14,subcat:'premium',name:{cs:'Rucola Pomodoro',en:'Rucola Pomodoro',ru:'Rucola Pomodoro'},desc:{cs:'Pelati Interi, Fior di Latte, sušená rajčata, rukola, Grana Padano',en:'Pelati Interi, Fior di Latte, sun-dried tomatoes, arugula, Grana Padano',ru:'Pelati Interi, Fior di Latte, вяленые томаты, руккола, Grana Padano'},price:315},
+  {id:'p17',cat:14,subcat:'premium',name:{cs:'DAVINCI Melanzane',en:'DAVINCI Melanzane',ru:'DAVINCI Melanzane'},desc:{cs:'Pelati Interi, Fior di Latte, paprika, grilovaný lilek, cherry rajčata, bazalka, česnekový olej',en:'Pelati Interi, Fior di Latte, pepper, grilled eggplant, cherry tomatoes, basil, garlic oil',ru:'Pelati Interi, Fior di Latte, перец, гриль-баклажан, черри, базилик, чесночное масло'},price:335},
+  {id:'p18',cat:14,subcat:'premium',name:{cs:'DAVINCI Piccante',en:'DAVINCI Piccante',ru:'DAVINCI Piccante'},desc:{cs:'Smetana, Fior di Latte, salám Spianata, červená cibule, jalapeño, Grana Padano',en:'Cream, Fior di Latte, Spianata salami, red onion, jalapeño, Grana Padano',ru:'Сливки, Fior di Latte, салями Spianata, красный лук, халапеньо, Grana Padano'},price:335},
+  {id:'p19',cat:14,subcat:'premium',name:{cs:'DAVINCI Parma',en:'DAVINCI Parma',ru:'DAVINCI Parma'},desc:{cs:'Pelati Interi, Fior di Latte, parmská šunka, rukola, Grana Padano',en:'Pelati Interi, Fior di Latte, Parma ham, arugula, Grana Padano',ru:'Pelati Interi, Fior di Latte, пармская ветчина, руккола, Grana Padano'},price:345},
+  {id:'p20',cat:14,subcat:'premium',name:{cs:'DAVINCI Nero',en:'DAVINCI Nero',ru:'DAVINCI Nero'},desc:{cs:'Smetana, Fior di Latte, salám Spianata, gorgonzola, žampiony',en:'Cream, Fior di Latte, Spianata salami, gorgonzola, mushrooms',ru:'Сливки, Fior di Latte, салями Spianata, горгонзола, шампиньоны'},price:355},
+  {id:'p21',cat:14,subcat:'premium',name:{cs:'DAVINCI Napoletana',en:'DAVINCI Napoletana',ru:'DAVINCI Napoletana'},desc:{cs:'Pelati Interi, Fior di Latte, ančovičky, olivy, kapary, bazalka',en:'Pelati Interi, Fior di Latte, anchovies, olives, capers, basil',ru:'Pelati Interi, Fior di Latte, анчоусы, оливки, каперсы, базилик'},price:355},
+  {id:'p22',cat:14,subcat:'premium',name:{cs:'DAVINCI Garden',en:'DAVINCI Garden',ru:'DAVINCI Garden'},desc:{cs:'Pelati Interi, Fior di Latte, bazalka, Grana Padano, cherry, bazalkové pesto, burrata',en:'Pelati Interi, Fior di Latte, basil, Grana Padano, cherry, basil pesto, burrata',ru:'Pelati Interi, Fior di Latte, базилик, Grana Padano, черри, песто, буррата'},price:365},
+  {id:'p23',cat:14,subcat:'premium',name:{cs:'DAVINCI Speciale',en:'DAVINCI Speciale',ru:'DAVINCI Speciale'},desc:{cs:'Pelati Interi, Fior di Latte, hovězí basturma, paprika, cherry, bazalka',en:'Pelati Interi, Fior di Latte, beef basturma, pepper, cherry, basil',ru:'Pelati Interi, Fior di Latte, бастурма, перец, черри, базилик'},price:375},
+  {id:'p24',cat:14,subcat:'premium',name:{cs:'DAVINCI Rosso (Bresaola)',en:'DAVINCI Rosso (Bresaola)',ru:'DAVINCI Rosso (Bresaola)'},desc:{cs:'Smetana, Fior di Latte, Grana Padano, rukola, bresaola, cherry, balzamiková redukce',en:'Cream, Fior di Latte, Grana Padano, arugula, bresaola, cherry, balsamic glaze',ru:'Сливки, Fior di Latte, Grana Padano, руккола, брезаола, черри, бальзамик'},price:395},
+  {id:'p25',cat:14,subcat:'premium',name:{cs:'DAVINCI Burrata Royale',en:'DAVINCI Burrata Royale',ru:'DAVINCI Burrata Royale'},desc:{cs:'Pelati Interi, Fior di Latte, cherry, rukola, parmská šunka, burrata, pesto, Grana Padano',en:'Pelati Interi, Fior di Latte, cherry, arugula, Parma ham, burrata, pesto, Grana Padano',ru:'Pelati Interi, Fior di Latte, черри, руккола, пармская ветчина, буррата, песто, Grana Padano'},price:435},
+
+  // Fitness
+  {id:'p26',cat:14,subcat:'fitness',name:{cs:'DAVINCI Tuna Power',en:'DAVINCI Tuna Power',ru:'DAVINCI Tuna Power'},desc:{cs:'Pelati Interi, Fior di Latte, tuňák, červená cibule, rukola',en:'Pelati Interi, Fior di Latte, tuna, red onion, arugula',ru:'Pelati Interi, Fior di Latte, тунец, красный лук, руккола'},price:325},
+  {id:'p27',cat:14,subcat:'fitness',name:{cs:'DAVINCI Protein Chicken',en:'DAVINCI Protein Chicken',ru:'DAVINCI Protein Chicken'},desc:{cs:'Pelati Interi, Fior di Latte, kuřecí maso, špenát, cherry, Grana Padano',en:'Pelati Interi, Fior di Latte, chicken, spinach, cherry, Grana Padano',ru:'Pelati Interi, Fior di Latte, курица, шпинат, черри, Grana Padano'},price:345},
+
+  // Sweet
+  {id:'p28',cat:14,subcat:'sweet',name:{cs:'Nutella & Pistácie (26 cm)',en:'Nutella & Pistachio (26 cm)',ru:'Nutella & Фисташки (26 cm)'},desc:{cs:'Nutella, pistáciové pesto, pistácie',en:'Nutella, pistachio pesto, pistachios',ru:'Nutella, фисташковое песто, фисташки'},price:325},
 ];
 
 // For "Ostatní drinky" — full Czech style "Na ginu / Na vodce"
@@ -380,16 +417,24 @@ const SUBCAT_NAMES_TEA = {
   tea:     {cs:'Čaje',     en:'Teas',     ru:'Чаи'},
   taiwan:  {cs:'Tchajwanské speciality',en:'Taiwanese specialties',ru:'Тайваньские спешелы'},
 };
+const SUBCAT_NAMES_PIZZA = {
+  classic:  {cs:'Pizza · 30–32 cm',         en:'Pizza · 30–32 cm',           ru:'Пицца · 30–32 см'},
+  premium:  {cs:'Pizza Premium · 30–32 cm', en:'Pizza Premium · 30–32 cm',   ru:'Pizza Premium · 30–32 см'},
+  fitness:  {cs:'DAVINCI Fitness 🥗',       en:'DAVINCI Fitness 🥗',         ru:'DAVINCI Fitness 🥗'},
+  sweet:    {cs:'Sweet Pizza 🍫',           en:'Sweet Pizza 🍫',             ru:'Sweet Pizza 🍫'},
+};
 function subcatName(cat, sc) {
   if (cat === 2)  return SUBCAT_NAMES_DRINKS[sc];
   if (cat === 11) return SUBCAT_NAMES_SHOTS[sc];
   if (cat === 3)  return SUBCAT_NAMES_TEA[sc];
+  if (cat === 14) return SUBCAT_NAMES_PIZZA[sc];
   return null;
 }
 const SUBCAT_ORDER_BY_CAT = {
   2:  ['gin','vodka','rum','tequila','whisky'],
   3:  ['tea','taiwan'],
   11: ['vodka','gin','whisky','tequila','cognac','rum','other'],
+  14: ['classic','premium','fitness','sweet'],
 };
 
 let lang = 'cs';
@@ -539,6 +584,16 @@ function renderMenu() {
   const cat = CATS[activeCat];
   const items = MENU.filter(m => m.cat === activeCat);
   let html = `<div class="section-title">${cat.emoji} ${cat.name[lang]}</div>`;
+
+  // Partner info banner for Pizza
+  if (activeCat === 14) {
+    const banner = {
+      cs: `<strong>Pizza od našeho partnera.</strong> Minimální objednávka 2 pizzy, jinak je účtována doprava 100 Kč. Doručuje partner, doba čekání až 60 minut.`,
+      en: `<strong>Pizza from our partner.</strong> Minimum order 2 pizzas, otherwise 100 Kč delivery fee applies. Partner delivers, wait time up to 60 minutes.`,
+      ru: `<strong>Пицца от нашего партнёра.</strong> Минимальный заказ — 2 пиццы, иначе доставка 100 Kč. Доставляет партнёр, ожидание до 60 минут.`,
+    }[lang];
+    html += `<div style="margin:0 16px 12px;padding:12px 14px;background:var(--surface);border:0.5px solid var(--line);border-radius:10px;font-size:12px;color:var(--text-2);line-height:1.5">${banner}</div>`;
+  }
   if (!items.length) {
     html += `<div class="empty-cat-hint">${I18N[lang].emptyCat}</div>`;
     el.innerHTML = html; return;
@@ -560,8 +615,7 @@ function renderMenu() {
   el.innerHTML = html;
 }
 
-// Macaron group discount: every 2 pcs save 40 Kč (95+95=190 → 150).
-// Counts ALL macarons in cart across flavours.
+// Macaron group pricing: 1 ks = 95 Kč. 2+ ks = 75 Kč each (across all flavours).
 function macaronCount() {
   return cart.filter(c => {
     const item = MENU.find(m => m.id === c.itemId);
@@ -570,10 +624,11 @@ function macaronCount() {
 }
 function macaronDiscount() {
   const n = macaronCount();
+  if (n < 2) return 0;
   const item = MENU.find(m => m.qtyPricing);
   if (!item) return 0;
-  const pairs = Math.floor(n / 2);
-  return pairs * (item.qtyPricing.single * 2 - item.qtyPricing.pair);
+  // What's currently charged in cart (everything at single=95) minus what should be charged (everything at 75)
+  return n * (item.qtyPricing.single - item.qtyPricing.bulk);
 }
 function cartSubtotal() { return cart.reduce((s, c) => s + c.price * c.qty, 0); }
 function cartTotal() { return cartSubtotal() - macaronDiscount(); }
@@ -636,7 +691,7 @@ function renderCartSheet() {
     ? `<div class="cart-item" style="border-bottom:none;padding-top:14px">
          <div class="cart-item-info">
            <div class="cart-item-name" style="color:var(--accent)">${ {cs:'Sleva za macarons',en:'Macarons discount',ru:'Скидка на макаруны'}[lang] }</div>
-           <div class="cart-item-variant">${ {cs:'každé 2 ks za 150 Kč',en:'every 2 pcs for 150 Kč',ru:'каждые 2 шт за 150 Kč'}[lang] }</div>
+           <div class="cart-item-variant">${ {cs:'od 2 ks za 75 Kč / ks',en:'from 2 pcs at 75 Kč each',ru:'от 2 шт по 75 Kč / шт'}[lang] }</div>
          </div>
          <span class="cart-item-price" style="color:var(--accent)">−${discount}&nbsp;Kč</span>
        </div>`
@@ -722,9 +777,9 @@ function renderDetail() {
   }
   if (it.qtyPricing) {
     const hint = {
-      cs: `Cena: ${it.qtyPricing.single} Kč / ks · Každé 2 ks za ${it.qtyPricing.pair} Kč`,
-      en: `Price: ${it.qtyPricing.single} Kč each · Every 2 pcs for ${it.qtyPricing.pair} Kč`,
-      ru: `Цена: ${it.qtyPricing.single} Kč / шт · Каждые 2 шт за ${it.qtyPricing.pair} Kč`,
+      cs: `Cena: ${it.qtyPricing.single} Kč / ks · Od 2 ks za ${it.qtyPricing.bulk} Kč / ks (libovolné příchutě)`,
+      en: `Price: ${it.qtyPricing.single} Kč each · From 2 pcs for ${it.qtyPricing.bulk} Kč each (any flavours)`,
+      ru: `Цена: ${it.qtyPricing.single} Kč / шт · От 2 шт — ${it.qtyPricing.bulk} Kč / шт (любые вкусы)`,
     }[lang];
     opts += `<div class="opt-group">
       <div class="opt-detail" style="background:var(--accent-soft);color:var(--accent);padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.5;margin-top:0">${hint}</div>
