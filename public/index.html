@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Hookkaido — Menu</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #f0ece4; min-height: 100vh; }
+.app { max-width: 480px; margin: 0 auto; padding-bottom: 100px; }
+
+/* Topbar */
+.topbar { background: #0a0a0a; padding: 14px 16px 12px; border-bottom: 0.5px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+.logo { font-size: 17px; font-weight: 600; letter-spacing: 0.08em; color: #f0ece4; }
+.logo span { color: #d4543e; }
+.lang-switch { display: flex; gap: 4px; }
+.lang-btn { background: none; border: 0.5px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.4); font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-family: inherit; }
+.lang-btn.active { border-color: rgba(255,255,255,0.5); color: #f0ece4; }
+
+/* Table bar */
+.table-bar { margin: 10px 16px; padding: 9px 14px; background: rgba(255,255,255,0.04); border-radius: 10px; border: 0.5px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 8px; }
+.table-dot { width: 7px; height: 7px; border-radius: 50%; background: #d4543e; flex-shrink: 0; }
+.table-label { font-size: 12px; color: rgba(255,255,255,0.4); }
+.table-name { font-size: 13px; font-weight: 500; color: #f0ece4; margin-left: auto; }
+
+/* Search */
+.search-wrap { position: relative; padding: 0 16px 12px; }
+.search-icon { position: absolute; left: 28px; top: 50%; transform: translateY(-60%); color: rgba(255,255,255,0.3); width: 16px; height: 16px; }
+.search-input { width: 100%; background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px 10px 38px; color: #f0ece4; font-size: 14px; font-family: inherit; outline: none; }
+.search-input::placeholder { color: rgba(255,255,255,0.3); }
+.search-input:focus { border-color: rgba(255,255,255,0.25); }
+
+/* Categories */
+.cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 16px 8px; }
+.cat-btn { padding: 10px 12px; border-radius: 10px; border: 0.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.55); font-size: 13px; cursor: pointer; text-align: left; font-family: inherit; }
+.cat-btn.active { background: #d4543e; border-color: #d4543e; color: #fff; }
+
+/* Menu */
+.section-title { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; color: rgba(255,255,255,0.25); text-transform: uppercase; padding: 14px 16px 8px; }
+.items-list { padding: 0 16px; }
+.item-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 0.5px solid rgba(255,255,255,0.06); cursor: pointer; }
+.item-row:last-child { border-bottom: none; }
+.item-info { flex: 1; min-width: 0; }
+.item-name { font-size: 14px; font-weight: 500; color: #f0ece4; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-name mark { background: rgba(212,84,62,0.4); color: #f0ece4; border-radius: 3px; padding: 0 2px; }
+.item-desc { font-size: 11px; color: rgba(255,255,255,0.32); line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-price { font-size: 13px; color: rgba(255,255,255,0.5); flex-shrink: 0; white-space: nowrap; }
+.item-add { width: 28px; height: 28px; border-radius: 50%; border: 0.5px solid rgba(255,255,255,0.2); background: none; color: rgba(255,255,255,0.5); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: inherit; line-height: 1; }
+.item-add.in-cart { background: #d4543e; border-color: #d4543e; color: #fff; font-size: 12px; font-weight: 600; }
+.no-results { padding: 40px 16px; text-align: center; color: rgba(255,255,255,0.25); font-size: 14px; }
+
+/* Cart bar */
+.cart-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 448px; background: #d4543e; border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; z-index: 100; transition: opacity 0.2s, transform 0.2s; }
+.cart-bar.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(8px); }
+.cart-bar-left { display: flex; align-items: center; gap: 10px; }
+.cart-count { background: rgba(255,255,255,0.25); border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600; color: #fff; }
+.cart-bar-label { font-size: 14px; font-weight: 500; color: #fff; }
+.cart-total { font-size: 14px; font-weight: 600; color: #fff; }
+
+/* Overlays */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; align-items: flex-end; }
+.overlay.open { display: flex; }
+.sheet { background: #111; border-radius: 20px 20px 0 0; padding: 18px 16px 36px; width: 100%; max-height: 85vh; overflow-y: auto; }
+.sheet-handle { width: 32px; height: 3px; background: rgba(255,255,255,0.15); border-radius: 2px; margin: 0 auto 20px; }
+.sheet-title { font-size: 17px; font-weight: 600; margin-bottom: 3px; color: #f0ece4; }
+.sheet-sub { font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 18px; }
+
+/* Cart items */
+.cart-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid rgba(255,255,255,0.07); }
+.cart-item-name { flex: 1; font-size: 13px; color: #f0ece4; line-height: 1.3; }
+.qty-ctrl { display: flex; align-items: center; gap: 8px; }
+.qty-btn { width: 26px; height: 26px; border-radius: 50%; border: 0.5px solid rgba(255,255,255,0.2); background: none; color: rgba(255,255,255,0.6); font-size: 17px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; }
+.qty-num { font-size: 14px; font-weight: 500; color: #f0ece4; min-width: 14px; text-align: center; }
+.cart-item-price { font-size: 13px; color: rgba(255,255,255,0.45); min-width: 56px; text-align: right; white-space: nowrap; }
+.comment-label { font-size: 12px; color: rgba(255,255,255,0.35); margin: 16px 0 6px; }
+.comment-input { width: 100%; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 9px 12px; color: #f0ece4; font-size: 13px; resize: none; height: 58px; font-family: inherit; outline: none; }
+.total-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 16px; }
+.total-label { font-size: 13px; color: rgba(255,255,255,0.4); }
+.total-amount { font-size: 21px; font-weight: 600; color: #f0ece4; }
+.order-btn { width: 100%; background: #d4543e; border: none; border-radius: 12px; padding: 14px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.order-btn:disabled { opacity: 0.5; cursor: default; }
+.order-success { text-align: center; padding: 12px 0 4px; }
+.order-success-title { font-size: 16px; font-weight: 500; color: #f0ece4; margin-bottom: 4px; }
+.order-success-sub { font-size: 13px; color: rgba(255,255,255,0.4); }
+
+/* Detail overlay */
+.detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 300; align-items: flex-end; }
+.detail-overlay.open { display: flex; }
+.detail-sheet { background: #111; border-radius: 20px 20px 0 0; padding: 18px 16px 36px; width: 100%; }
+.detail-name { font-size: 19px; font-weight: 600; color: #f0ece4; margin-bottom: 8px; line-height: 1.3; }
+.detail-desc { font-size: 14px; color: rgba(255,255,255,0.4); line-height: 1.7; margin-bottom: 24px; }
+.detail-row { display: flex; align-items: center; justify-content: space-between; }
+.detail-price { font-size: 22px; font-weight: 600; color: #f0ece4; }
+.detail-add { background: #d4543e; border: none; border-radius: 12px; padding: 12px 24px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="logo">HOOK<span>KA</span>IDO</div>
+    <div class="lang-switch">
+      <button class="lang-btn active" onclick="setLang('cs')">CZ</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('ru')">RU</button>
+    </div>
+  </div>
+
+  <div class="table-bar">
+    <div class="table-dot"></div>
+    <span class="table-label" id="lbl-tp">Stůl</span>
+    <span class="table-name" id="tname">—</span>
+  </div>
+
+  <div class="search-wrap">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input class="search-input" id="search" placeholder="Hledat..." oninput="onSearch(this.value)" autocomplete="off" />
+  </div>
+
+  <div id="cat-section">
+    <div class="cat-grid" id="cat-grid"></div>
+  </div>
+
+  <div id="menu-content"></div>
+
+  <div class="cart-bar hidden" id="cart-bar" onclick="openCart()">
+    <div class="cart-bar-left">
+      <span class="cart-count" id="cart-count">0</span>
+      <span class="cart-bar-label" id="lbl-order">Zobrazit objednávku</span>
+    </div>
+    <span class="cart-total" id="cart-bar-total">0 Kč</span>
+  </div>
+</div>
+
+<!-- Cart overlay -->
+<div class="overlay" id="cart-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="lbl-your-order">Vaše objednávka</div>
+    <div class="sheet-sub" id="cart-sub"></div>
+    <div id="cart-items"></div>
+    <div class="comment-label" id="lbl-comment">Komentář</div>
+    <textarea class="comment-input" id="comment-input" placeholder="méně ledu, alergeny..."></textarea>
+    <div class="total-row">
+      <span class="total-label" id="lbl-total">Celkem</span>
+      <span class="total-amount" id="cart-total-amount">0 Kč</span>
+    </div>
+    <div id="order-result"></div>
+    <button class="order-btn" id="order-btn" onclick="sendOrder()">Odeslat objednávku</button>
+  </div>
+</div>
+
+<!-- Detail overlay -->
+<div class="detail-overlay" id="detail-overlay">
+  <div class="detail-sheet">
+    <div class="sheet-handle"></div>
+    <div class="detail-name" id="d-name"></div>
+    <div class="detail-desc" id="d-desc"></div>
+    <div class="detail-row">
+      <span class="detail-price" id="d-price"></span>
+      <button class="detail-add" id="lbl-add" onclick="addFromDetail()">Přidat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TABLES = {
+  velky:     { cs:'Sapporo',   en:'Sapporo',   ru:'Саппоро',   internal:'Velký' },
+  vstup:     { cs:'Hakodate',  en:'Hakodate',  ru:'Хакодатэ',  internal:'Vstup' },
+  uprostred: { cs:'Asahikawa', en:'Asahikawa', ru:'Асахикава', internal:'Uprostřed' },
+  nakashi:   { cs:'Otaru',     en:'Otaru',     ru:'Отару',     internal:'Nakashi' },
+  obraz:     { cs:'Furano',    en:'Furano',    ru:'Фурано',    internal:'Obraz' },
+  neon:      { cs:'Kushiro',   en:'Kushiro',   ru:'Кусиро',    internal:'Neon' },
+  wcneon:    { cs:'Wakkanai',  en:'Wakkanai',  ru:'Вакканай',  internal:'WC Neon' },
+};
+
+const I18N = {
+  cs:{ tp:'Stůl', order:'Zobrazit objednávku', yourOrder:'Vaše objednávka', comment:'Komentář k objednávce', total:'Celkem', send:'Odeslat objednávku', add:'Přidat do košíku', ph:'méně ledu, alergeny...', noResults:'Nic nenalezeno', search:'Hledat...', tl:'Stůl', sent:'Odesláno ✓', sentSub:'Personál byl informován, brzy u vás budeme.' },
+  en:{ tp:'Table', order:'View order', yourOrder:'Your order', comment:'Comment', total:'Total', send:'Send order', add:'Add to cart', ph:'less ice, allergies...', noResults:'Nothing found', search:'Search...', tl:'Table', sent:'Sent ✓', sentSub:'Staff has been notified, we\'ll be right with you.' },
+  ru:{ tp:'Стол', order:'Смотреть заказ', yourOrder:'Ваш заказ', comment:'Комментарий', total:'Итого', send:'Отправить заказ', add:'В корзину', ph:'меньше льда, аллергии...', noResults:'Ничего не найдено', search:'Поиск...', tl:'Стол', sent:'Отправлено ✓', sentSub:'Персонал уведомлён, скоро будем.' },
+};
+
+const CAT_NAMES = {
+  cs:['Signature koktejly','Spritz','Vodka koktejly','Čaje','Nealko legendy','Limonády','Káva','Deserty','Pivo','Šumivá vína','4cl Seppuku','Voda'],
+  en:['Signature cocktails','Spritz','Vodka cocktails','Teas','Non-alco','Lemonades','Coffee','Desserts','Beer','Sparkling wine','4cl Seppuku','Water'],
+  ru:['Сигнатурные','Спритц','Водка','Чаи','Безалко','Лимонады','Кофе','Десерты','Пиво','Игристые','4cl Сеппуку','Вода'],
+};
+
+const MENU = [
+  {id:'s1',cat:0,name:{cs:'Sakura',en:'Sakura',ru:'Sakura'},desc:{cs:'Gordon\'s Pink Gin, tonic',en:'Gordon\'s Pink Gin, tonic',ru:'Gordon\'s Pink Gin, тоник'},price:175},
+  {id:'s2',cat:0,name:{cs:'Gin & Passion',en:'Gin & Passion',ru:'Gin & Passion'},desc:{cs:'Gordon\'s Passion Fruit Gin, tonic, pomeranč',en:'Gordon\'s Passion Fruit Gin, tonic, orange',ru:'Gordon\'s Passion Fruit Gin, тоник, апельсин'},price:175},
+  {id:'s3',cat:0,name:{cs:'Hookkaipirinha',en:'Hookkaipirinha',ru:'Hookkaipirinha'},desc:{cs:'Cachaça Magnífica, passionfruit, soda, limetka',en:'Cachaça Magnífica, passionfruit, soda, lime',ru:'Cachaça Magnífica, маракуйя, сода, лайм'},price:185},
+  {id:'s4',cat:0,name:{cs:'Karamüller',en:'Karamüller',ru:'Karamüller'},desc:{cs:'Pampero Especial, karamel, vanilka, soda, pomeranč',en:'Pampero Especial, caramel, vanilla, soda, orange',ru:'Pampero Especial, карамель, ваниль, сода, апельсин'},price:185},
+  {id:'s5',cat:0,name:{cs:'Osaka Sunset',en:'Osaka Sunset',ru:'Osaka Sunset'},desc:{cs:'Cachaça Magnífica, Cointreau, mandarinka, vanilka, pomeranč',en:'Cachaça Magnífica, Cointreau, mandarin, vanilla, orange',ru:'Cachaça Magnífica, Cointreau, мандарин, ваниль, апельсин'},price:225},
+  {id:'s6',cat:0,name:{cs:'Silky & fruity',en:'Silky & fruity',ru:'Silky & fruity'},desc:{cs:'Pampero Blanco, passion fruit, mango, mandarinka, soda',en:'Pampero Blanco, passion fruit, mango, mandarin, soda',ru:'Pampero Blanco, маракуйя, манго, мандарин, сода'},price:185},
+  {id:'s7',cat:0,name:{cs:'Asian Sour Shock Nikka',en:'Asian Sour Shock Nikka',ru:'Asian Sour Shock Nikka'},desc:{cs:'Nikka From the Barrel, yuzu džem, limetka, passionfruit, soda',en:'Nikka From the Barrel, yuzu jam, lime, passionfruit, soda',ru:'Nikka From the Barrel, джем юзу, лайм, маракуйя, сода'},price:265},
+  {id:'s8',cat:0,name:{cs:'Origin in Japan / Misuwari',en:'Origin in Japan / Misuwari',ru:'Origin in Japan / Misuwari'},desc:{cs:'Suntory Whisky Chita, soda',en:'Suntory Whisky Chita, soda',ru:'Suntory Whisky Chita, сода'},price:265},
+  {id:'s9',cat:0,name:{cs:'Cutie COSPLAY',en:'Cutie COSPLAY',ru:'Cutie COSPLAY'},desc:{cs:'Tanqueray London Dry Gin, fialka, soda, citron',en:'Tanqueray London Dry Gin, violet, soda, lemon',ru:'Tanqueray London Dry Gin, фиалка, сода, лимон'},price:175},
+  {id:'s10',cat:0,name:{cs:'Lemongrass Rickey',en:'Lemongrass Rickey',ru:'Lemongrass Rickey'},desc:{cs:'Roku Gin, lemongrass, zelená mandarinka, limetka',en:'Roku Gin, lemongrass, green mandarin, lime',ru:'Roku Gin, лемонграсс, зелёный мандарин, лайм'},price:190},
+  {id:'s11',cat:0,name:{cs:'3G',en:'3G',ru:'3G'},desc:{cs:'Tanqueray Rangpur Gin, guava, ginger tea jam, soda, bazalka',en:'Tanqueray Rangpur Gin, guava, ginger tea jam, soda, basil',ru:'Tanqueray Rangpur Gin, гуава, варенье из имбирного чая, сода, базилик'},price:225},
+  {id:'s12',cat:0,name:{cs:'Sapporo',en:'Sapporo',ru:'Sapporo'},desc:{cs:'Roku Gin, brusinková šťáva, citron, javorový syrup, skořice',en:'Roku Gin, cranberry juice, lemon, maple syrup, cinnamon',ru:'Roku Gin, клюквенный сок, лимон, кленовый сироп, корица'},price:255},
+  {id:'s13',cat:0,name:{cs:'Dragon\'s spirit',en:'Dragon\'s spirit',ru:'Dragon\'s spirit'},desc:{cs:'Tequila 1800 ANEJO Reserva, dragon fruit, soda, pomeranč',en:'Tequila 1800 ANEJO Reserva, dragon fruit, soda, orange',ru:'Tequila 1800 ANEJO Reserva, питайя, сода, апельсин'},price:175},
+  {id:'s14',cat:0,name:{cs:'Lemongrass Margarita',en:'Lemongrass Margarita',ru:'Lemongrass Margarita'},desc:{cs:'Tequila Blanco, Cointreau, lemongrass, limetka',en:'Tequila Blanco, Cointreau, lemongrass, lime',ru:'Tequila Blanco, Cointreau, лемонграсс, лайм'},price:195},
+  {id:'s15',cat:0,name:{cs:'Ultimate',en:'Ultimate',ru:'Ultimate'},desc:{cs:'Roku Gin, Campari, lychee, pomeranč, yuzu, soda',en:'Roku Gin, Campari, lychee, orange, yuzu, soda',ru:'Roku Gin, Campari, личи, апельсин, юзу, сода'},price:255},
+  {id:'s16',cat:0,name:{cs:'Sangria-San (0.5l)',en:'Sangria-San (0.5l)',ru:'Sangria-San (0.5l)'},desc:{cs:'Španělská sangria s rumem Pampero Especial, pomerančem, jablkem, yuzu',en:'Spanish sangria with Pampero Especial rum, orange, apple, yuzu',ru:'Испанская сангрия с Pampero Especial, апельсином, яблоком, юзу'},price:245},
+  {id:'s17',cat:0,name:{cs:'Ibiisukasu — japonský svařák',en:'Ibiisukasu — japanese mulled',ru:'Ibiisukasu — японский глинтвейн'},desc:{cs:'Gin Rangpur, ibišek, citron, cukr, pomeranč',en:'Gin Rangpur, hibiscus, lemon, sugar, orange',ru:'Gin Rangpur, гибискус, лимон, сахар, апельсин'},price:215},
+  {id:'sp1',cat:1,name:{cs:'Hookkaido spritzer',en:'Hookkaido spritzer',ru:'Hookkaido spritzer'},desc:{cs:'Campari, Prosecco, soda, liči, limetka, máta',en:'Campari, Prosecco, soda, lychee, lime, mint',ru:'Campari, Prosecco, сода, личи, лайм, мята'},price:155},
+  {id:'sp2',cat:1,name:{cs:'Sapa Spring',en:'Sapa Spring',ru:'Sapa Spring'},desc:{cs:'Tanqueray London Dry, Prosecco, zelená mandarinka, limetka, máta',en:'Tanqueray London Dry, Prosecco, green mandarin, lime, mint',ru:'Tanqueray London Dry, Prosecco, зелёный мандарин, лайм, мята'},price:215},
+  {id:'v1',cat:2,name:{cs:'Tokyo bitch',en:'Tokyo bitch',ru:'Tokyo bitch'},desc:{cs:'Vodka Amundsen, fialka, soda, limetka',en:'Amundsen vodka, violet, soda, lime',ru:'Водка Amundsen, фиалка, сода, лайм'},price:165},
+  {id:'v2',cat:2,name:{cs:'Yuzuki',en:'Yuzuki',ru:'Yuzuki'},desc:{cs:'Suntory Haku, yuzu, soda, citron',en:'Suntory Haku, yuzu, soda, lemon',ru:'Suntory Haku, юзу, сода, лимон'},price:195},
+  {id:'v3',cat:2,name:{cs:'Geisha (Rare Bitch)',en:'Geisha (Rare Bitch)',ru:'Geisha (Rare Bitch)'},desc:{cs:'Suntory Haku, soda, limetka',en:'Suntory Haku, soda, lime',ru:'Suntory Haku, сода, лайм'},price:195},
+  {id:'v4',cat:2,name:{cs:'Yamete kudasai',en:'Yamete kudasai',ru:'Yamete kudasai'},desc:{cs:'Suntory Haku, Prosecco, liči, vanilka, limetka',en:'Suntory Haku, Prosecco, lychee, vanilla, lime',ru:'Suntory Haku, Prosecco, личи, ваниль, лайм'},price:225},
+  {id:'t1',cat:3,name:{cs:'Yunnan Simao Lancang Tuo Cha',en:'Yunnan Simao Lancang Tuo Cha',ru:'Yunnan Simao Lancang Tuo Cha'},desc:{cs:'Černý silný pu-erh',en:'Strong black pu-erh',ru:'Тёмный крепкий пуэр'},price:90},
+  {id:'t2',cat:3,name:{cs:'Sudan ~ ibišek',en:'Sudan ~ hibiscus',ru:'Судан ~ гибискус'},desc:{cs:'Bezkofeinový čaj z květů ibišku',en:'Caffeine-free hibiscus tea',ru:'Безкофеиновый чай из гибискуса'},price:100},
+  {id:'t3',cat:3,name:{cs:'Kagoshima Chiran Genmaicha',en:'Kagoshima Chiran Genmaicha',ru:'Kagoshima Chiran Genmaicha'},desc:{cs:'Zelený čaj Sencha s praženou rýží',en:'Sencha with roasted rice',ru:'Сенча с жареным рисом'},price:120},
+  {id:'t4',cat:3,name:{cs:'Kumamoto Satsuma Sencha',en:'Kumamoto Satsuma Sencha',ru:'Kumamoto Satsuma Sencha'},desc:{cs:'Japonský zelený čaj s nasládlou bylinnou chutí',en:'Japanese green tea, mild herbaceous flavour',ru:'Японский зелёный чай с травяным вкусом'},price:140},
+  {id:'t5',cat:3,name:{cs:'Jasmin Dragon Bean',en:'Jasmin Dragon Bean',ru:'Jasmin Dragon Bean'},desc:{cs:'Jasmínový čaj — dračí perly',en:'Jasmine dragon pearl tea',ru:'Жасминовый чай — жемчужины дракона'},price:160},
+  {id:'t6',cat:3,name:{cs:'Miyazaki Koyu Gyokuro Yabukita',en:'Miyazaki Koyu Gyokuro Yabukita',ru:'Miyazaki Koyu Gyokuro Yabukita'},desc:{cs:'Nejvyšší třída japonského zeleného čaje',en:'Premium shaded Japanese green tea',ru:'Высший сорт японского зелёного чая'},price:180},
+  {id:'t7',cat:3,name:{cs:'Zhu Shan King Rose Jin Xuan',en:'Zhu Shan King Rose Jin Xuan',ru:'Zhu Shan King Rose Jin Xuan'},desc:{cs:'Tchajwanský oolong s květy růže',en:'Taiwanese oolong with rose petals',ru:'Тайваньский улун с лепестками розы'},price:180},
+  {id:'t8',cat:3,name:{cs:'Nantou Fo Shou Gan Earl Grey',en:'Nantou Fo Shou Gan Earl Grey',ru:'Nantou Fo Shou Gan Earl Grey'},desc:{cs:'Tchajwanský oolong s bergamotem',en:'Taiwanese oolong with bergamot',ru:'Тайваньский улун с бергамотом'},price:180},
+  {id:'t9',cat:3,name:{cs:'Nai Xian Ginshan',en:'Nai Xian Ginshan',ru:'Nai Xian Ginshan'},desc:{cs:'Tchajwanský oolong s vanilkovou mléčnou chutí',en:'Taiwanese oolong with milky vanilla notes',ru:'Тайваньский улун с молочно-ванильными нотами'},price:180},
+  {id:'n1',cat:4,name:{cs:'Matcha ōtsu (0.45l)',en:'Matcha ōtsu (0.45l)',ru:'Matcha ōtsu (0.45l)'},desc:{cs:'Matcha, ovesný nápoj, salko',en:'Matcha, oat milk, condensed milk',ru:'Матча, овсяное молоко, сгущёнка'},price:145},
+  {id:'n2',cat:4,name:{cs:'Kaedamiruku (0.45l)',en:'Kaedamiruku (0.45l)',ru:'Kaedamiruku (0.45l)'},desc:{cs:'Černý čaj, kardamon, kokosový nápoj, vanilka',en:'Black tea, cardamom, coconut milk, vanilla',ru:'Чёрный чай, кардамон, кокосовое молоко, ваниль'},price:145},
+  {id:'n3',cat:4,name:{cs:'Legendární mangovka (0.35l)',en:'Legendary mango (0.35l)',ru:'Легендарное манго (0.35l)'},desc:{cs:'Mango smoothie, mango, cukr, soda',en:'Mango smoothie, sugar, soda',ru:'Манговый смузи, сахар, сода'},price:115},
+  {id:'n4',cat:4,name:{cs:'Legendární mangovka (1l)',en:'Legendary mango (1l)',ru:'Легендарное манго (1l)'},desc:{cs:'Mango smoothie, mango, cukr, soda',en:'Mango smoothie, sugar, soda',ru:'Манговый смузи, сахар, сода'},price:215},
+  {id:'k1',cat:5,name:{cs:'Limonáda Hookkaido (0.35l)',en:'Hookkaido lemonade (0.35l)',ru:'Лимонад Hookkaido (0.35l)'},desc:{cs:'Violette / Lemongrass / Ginger / Levandule',en:'Violet / Lemongrass / Ginger / Lavender',ru:'Фиалка / Лемонграсс / Имбирь / Лаванда'},price:90},
+  {id:'k2',cat:5,name:{cs:'Limonáda Hookkaido (1l)',en:'Hookkaido lemonade (1l)',ru:'Лимонад Hookkaido (1l)'},desc:{cs:'Violette / Lemongrass / Ginger / Levandule',en:'Violet / Lemongrass / Ginger / Lavender',ru:'Фиалка / Лемонграсс / Имбирь / Лаванда'},price:165},
+  {id:'k3',cat:5,name:{cs:'Limonáda Special (0.35l)',en:'Hookkaido Special (0.35l)',ru:'Лимонад Special (0.35l)'},desc:{cs:'Sweet & Spicy Manga / Yum Yum / Yuzu & Basil / Bara kyuuri',en:'Sweet & Spicy Manga / Yum Yum / Yuzu & Basil / Bara kyuuri',ru:'Sweet & Spicy Manga / Yum Yum / Yuzu & Basil / Bara kyuuri'},price:110},
+  {id:'k4',cat:5,name:{cs:'Limonáda Special (1l)',en:'Hookkaido Special (1l)',ru:'Лимонад Special (1l)'},desc:{cs:'Sweet & Spicy Manga / Yum Yum / Yuzu & Basil / Bara kyuuri',en:'Sweet & Spicy Manga / Yum Yum / Yuzu & Basil / Bara kyuuri',ru:'Sweet & Spicy Manga / Yum Yum / Yuzu & Basil / Bara kyuuri'},price:195},
+  {id:'c1',cat:6,name:{cs:'Cà Phê Phin (0.45l)',en:'Cà Phê Phin (0.45l)',ru:'Cà Phê Phin (0.45l)'},desc:{cs:'Vietnamská filtrovaná káva — horká nebo s ledem',en:'Vietnamese filter coffee — hot or iced',ru:'Вьетнамский фильтровый кофе — горячий или со льдом'},price:100},
+  {id:'d1',cat:7,name:{cs:'Mochi',en:'Mochi',ru:'Мочи'},desc:{cs:'Krémová zmrzlina v rýžovém těstíčku — zeptejte se obsluhy',en:'Creamy ice cream in soft rice dough — ask staff for today\'s flavours',ru:'Сливочное мороженое в рисовом тесте — спросите о вкусах'},price:100},
+  {id:'b1',cat:8,name:{cs:'OX-Oxymoron 13° (0.75l)',en:'OX-Oxymoron 13° (0.75l)',ru:'OX-Oxymoron 13° (0.75l)'},desc:{cs:'Ovocný Lager Ale / polo-ležák',en:'Fruity Lager Ale / semi-lager',ru:'Фруктовый Lager Ale'},price:165},
+  {id:'b2',cat:8,name:{cs:'Sakuráč 11° (0.75l)',en:'Sakuráč 11° (0.75l)',ru:'Sakuráč 11° (0.75l)'},desc:{cs:'Česko-japonský čajový Ale',en:'Czech-Japanese tea Ale',ru:'Чешско-японский чайный Ale'},price:190},
+  {id:'w1',cat:9,name:{cs:'Costaross (0.2l)',en:'Costaross (0.2l)',ru:'Costaross (0.2l)'},desc:{cs:'Šumivé víno',en:'Sparkling wine',ru:'Игристое вино'},price:190},
+  {id:'w2',cat:9,name:{cs:'Costaross (0.75l)',en:'Costaross (0.75l)',ru:'Costaross (0.75l)'},desc:{cs:'Šumivé víno',en:'Sparkling wine',ru:'Игристое вино'},price:450},
+  {id:'w3',cat:9,name:{cs:'Champagne Faÿ-Berjot Brut Tradition (0.75l)',en:'Champagne Faÿ-Berjot Brut Tradition (0.75l)',ru:'Champagne Faÿ-Berjot Brut Tradition (0.75l)'},desc:{cs:'Šampaňské',en:'Champagne',ru:'Шампанское'},price:990},
+  {id:'e1',cat:10,name:{cs:'Amundsen vodka 4cl',en:'Amundsen vodka 4cl',ru:'Водка Amundsen 4cl'},desc:{cs:'Vodka',en:'Vodka',ru:'Водка'},price:90},
+  {id:'e2',cat:10,name:{cs:'Suntory Haku 4cl',en:'Suntory Haku 4cl',ru:'Suntory Haku 4cl'},desc:{cs:'Japonská rýžová vodka',en:'Japanese rice vodka',ru:'Японская рисовая водка'},price:165},
+  {id:'e3',cat:10,name:{cs:'Tanqueray London Dry 4cl',en:'Tanqueray London Dry 4cl',ru:'Tanqueray London Dry 4cl'},desc:{cs:'Gin',en:'Gin',ru:'Джин'},price:125},
+  {id:'e4',cat:10,name:{cs:'Tanqueray Rangpur 4cl',en:'Tanqueray Rangpur 4cl',ru:'Tanqueray Rangpur 4cl'},desc:{cs:'Gin',en:'Gin',ru:'Джин'},price:145},
+  {id:'e5',cat:10,name:{cs:'Suntory Roku 4cl',en:'Suntory Roku 4cl',ru:'Suntory Roku 4cl'},desc:{cs:'Japonský gin',en:'Japanese gin',ru:'Японский джин'},price:165},
+  {id:'e6',cat:10,name:{cs:'Gordon\'s Pink 4cl',en:'Gordon\'s Pink 4cl',ru:'Gordon\'s Pink 4cl'},desc:{cs:'Gin',en:'Gin',ru:'Джин'},price:125},
+  {id:'e7',cat:10,name:{cs:'Gordon\'s Passion 4cl',en:'Gordon\'s Passion 4cl',ru:'Gordon\'s Passion 4cl'},desc:{cs:'Gin',en:'Gin',ru:'Джин'},price:125},
+  {id:'e8',cat:10,name:{cs:'Johnnie Walker Red Label 4cl',en:'Johnnie Walker Red Label 4cl',ru:'Johnnie Walker Red Label 4cl'},desc:{cs:'Skotská whisky',en:'Scotch whisky',ru:'Шотландский виски'},price:145},
+  {id:'e9',cat:10,name:{cs:'Nikka From The Barrel 4cl',en:'Nikka From The Barrel 4cl',ru:'Nikka From The Barrel 4cl'},desc:{cs:'Japonská whisky',en:'Japanese whisky',ru:'Японский виски'},price:195},
+  {id:'e10',cat:10,name:{cs:'Prádlo 10yo 4cl',en:'Prádlo 10yo 4cl',ru:'Prádlo 10yo 4cl'},desc:{cs:'Česká whisky 10 let',en:'Czech whisky aged 10 years',ru:'Чешский виски 10 лет'},price:245},
+  {id:'e11',cat:10,name:{cs:'Suntory The Chita 4cl',en:'Suntory The Chita 4cl',ru:'Suntory The Chita 4cl'},desc:{cs:'Japonský grain whisky',en:'Japanese grain whisky',ru:'Японский зерновой виски'},price:225},
+  {id:'e12',cat:10,name:{cs:'Hibiki Japanese Harmony 4cl',en:'Hibiki Japanese Harmony 4cl',ru:'Hibiki Japanese Harmony 4cl'},desc:{cs:'Japonský blended whisky',en:'Japanese blended whisky',ru:'Японский блендированный виски'},price:340},
+  {id:'e13',cat:10,name:{cs:'1800 Blanco 4cl',en:'1800 Blanco 4cl',ru:'1800 Blanco 4cl'},desc:{cs:'Tequila',en:'Tequila',ru:'Текила'},price:145},
+  {id:'e14',cat:10,name:{cs:'1800 ANEJO Reserva 4cl',en:'1800 ANEJO Reserva 4cl',ru:'1800 ANEJO Reserva 4cl'},desc:{cs:'Tequila',en:'Tequila',ru:'Текила'},price:155},
+  {id:'e15',cat:10,name:{cs:'Courvoisier XO 4cl',en:'Courvoisier XO 4cl',ru:'Courvoisier XO 4cl'},desc:{cs:'Koňak',en:'Cognac',ru:'Коньяк'},price:365},
+  {id:'e16',cat:10,name:{cs:'Legendario Anejo Oro 4cl',en:'Legendario Anejo Oro 4cl',ru:'Legendario Anejo Oro 4cl'},desc:{cs:'Rum',en:'Rum',ru:'Ром'},price:125},
+  {id:'e17',cat:10,name:{cs:'Pampero Blanco 4cl',en:'Pampero Blanco 4cl',ru:'Pampero Blanco 4cl'},desc:{cs:'Rum',en:'Rum',ru:'Ром'},price:125},
+  {id:'e18',cat:10,name:{cs:'Cachaça Magnífica 4cl',en:'Cachaça Magnífica 4cl',ru:'Cachaça Magnífica 4cl'},desc:{cs:'Cachaça',en:'Cachaça',ru:'Качаса'},price:165},
+  {id:'e19',cat:10,name:{cs:'Pampero Especial 4cl',en:'Pampero Especial 4cl',ru:'Pampero Especial 4cl'},desc:{cs:'Rum',en:'Rum',ru:'Ром'},price:165},
+  {id:'e20',cat:10,name:{cs:'Abuelo 7yo 4cl',en:'Abuelo 7yo 4cl',ru:'Abuelo 7yo 4cl'},desc:{cs:'Rum 7 let',en:'Rum aged 7 years',ru:'Ром 7 лет'},price:165},
+  {id:'e21',cat:10,name:{cs:'Zacapa Centenario 4cl',en:'Zacapa Centenario 4cl',ru:'Zacapa Centenario 4cl'},desc:{cs:'Rum',en:'Rum',ru:'Ром'},price:185},
+  {id:'e22',cat:10,name:{cs:'Cointreau 4cl',en:'Cointreau 4cl',ru:'Cointreau 4cl'},desc:{cs:'Likér',en:'Liqueur',ru:'Ликёр'},price:125},
+  {id:'e23',cat:10,name:{cs:'Campari 4cl',en:'Campari 4cl',ru:'Campari 4cl'},desc:{cs:'Aperitiv',en:'Aperitif',ru:'Аперитив'},price:125},
+  {id:'e24',cat:10,name:{cs:'Don Papa 4cl',en:'Don Papa 4cl',ru:'Дон Папа 4cl'},desc:{cs:'Rum',en:'Rum',ru:'Ром'},price:165},
+  {id:'wa1',cat:11,name:{cs:'Domácí ledový čaj (1l)',en:'House iced tea (1l)',ru:'Домашний холодный чай (1l)'},desc:{cs:'Jasmín, ibišek, matcha, černý čaj s kardamonem',en:'Jasmine, hibiscus, matcha, black tea with cardamom',ru:'Жасмин, гибискус, матча, чёрный чай с кардамоном'},price:205},
+  {id:'wa2',cat:11,name:{cs:'Karafa (1l)',en:'Carafe (1l)',ru:'Карафа (1l)'},desc:{cs:'Perlivá nebo neperlivá voda s ovocem',en:'Still or sparkling water with fruit',ru:'Вода с фруктами на выбор'},price:100},
+];
+
+let lang = 'cs';
+let activeCat = -1;
+let searchQ = '';
+let cart = {};
+let detailItem = null;
+
+// --- Table from URL ---
+const params = new URLSearchParams(window.location.search);
+const tableKey = (params.get('stol') || 'obraz').toLowerCase().replace(/[\s-]/g, '');
+const currentTable = TABLES[tableKey] ? tableKey : 'obraz';
+document.getElementById('tname').textContent = TABLES[currentTable].cs;
+
+function getTableName() { return TABLES[currentTable][lang]; }
+function getTableInternal() { return TABLES[currentTable].internal; }
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent === l.toUpperCase()));
+  const i = I18N[l];
+  document.getElementById('lbl-tp').textContent = i.tp;
+  document.getElementById('lbl-order').textContent = i.order;
+  document.getElementById('lbl-your-order').textContent = i.yourOrder;
+  document.getElementById('lbl-comment').textContent = i.comment;
+  document.getElementById('lbl-total').textContent = i.total;
+  document.getElementById('order-btn').textContent = i.send;
+  document.getElementById('lbl-add').textContent = i.add;
+  document.getElementById('comment-input').placeholder = i.ph;
+  document.getElementById('search').placeholder = i.search;
+  document.getElementById('tname').textContent = getTableName();
+  document.getElementById('cart-sub').textContent = i.tl + ': ' + getTableName();
+  renderCats(); renderMenu(); updateCartBar();
+}
+
+function renderCats() {
+  document.getElementById('cat-grid').innerHTML = CAT_NAMES[lang].map((n, i) =>
+    `<button class="cat-btn${i === activeCat ? ' active' : ''}" onclick="selectCat(${i})">${n}</button>`
+  ).join('');
+}
+
+function selectCat(i) {
+  activeCat = (activeCat === i) ? -1 : i;
+  searchQ = '';
+  document.getElementById('search').value = '';
+  document.getElementById('cat-section').style.display = '';
+  renderCats(); renderMenu();
+}
+
+function onSearch(q) {
+  searchQ = q.trim().toLowerCase();
+  if (searchQ) {
+    activeCat = -1;
+    document.getElementById('cat-section').style.display = 'none';
+  } else {
+    document.getElementById('cat-section').style.display = '';
+  }
+  renderMenu();
+}
+
+function highlight(text, q) {
+  if (!q) return text;
+  const idx = text.toLowerCase().indexOf(q);
+  if (idx < 0) return text;
+  return text.slice(0, idx) + '<mark>' + text.slice(idx, idx + q.length) + '</mark>' + text.slice(idx + q.length);
+}
+
+function itemRow(item, q) {
+  const inCart = cart[item.id] > 0;
+  const btn = inCart
+    ? `<button class="item-add in-cart" onclick="event.stopPropagation();addItem('${item.id}')">${cart[item.id]}</button>`
+    : `<button class="item-add" onclick="event.stopPropagation();addItem('${item.id}')">+</button>`;
+  return `<div class="item-row" onclick="openDetail('${item.id}')">
+    <div class="item-info">
+      <div class="item-name">${q ? highlight(item.name[lang], q) : item.name[lang]}</div>
+      <div class="item-desc">${item.desc[lang]}</div>
+    </div>
+    <span class="item-price">${item.price}&nbsp;Kč</span>
+    ${btn}
+  </div>`;
+}
+
+function renderMenu() {
+  const el = document.getElementById('menu-content');
+  if (searchQ) {
+    const items = MENU.filter(m =>
+      m.name[lang].toLowerCase().includes(searchQ) ||
+      m.desc[lang].toLowerCase().includes(searchQ)
+    );
+    el.innerHTML = items.length
+      ? `<div class="items-list">${items.map(m => itemRow(m, searchQ)).join('')}</div>`
+      : `<div class="no-results">${I18N[lang].noResults}</div>`;
+  } else if (activeCat >= 0) {
+    const items = MENU.filter(m => m.cat === activeCat);
+    el.innerHTML = `<div class="section-title">${CAT_NAMES[lang][activeCat]}</div><div class="items-list">${items.map(m => itemRow(m, '')).join('')}</div>`;
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+function addItem(id) {
+  cart[id] = (cart[id] || 0) + 1;
+  renderMenu(); updateCartBar();
+}
+
+function updateCartBar() {
+  const count = Object.values(cart).reduce((s, q) => s + q, 0);
+  const total = Object.entries(cart).reduce((s, [id, q]) => {
+    const m = MENU.find(x => x.id === id); return s + (m ? m.price * q : 0);
+  }, 0);
+  document.getElementById('cart-bar').classList.toggle('hidden', count === 0);
+  document.getElementById('cart-count').textContent = count;
+  document.getElementById('cart-bar-total').textContent = total + ' Kč';
+}
+
+function openCart() {
+  renderCartSheet();
+  document.getElementById('cart-overlay').classList.add('open');
+}
+
+function renderCartSheet() {
+  const i = I18N[lang];
+  const rows = Object.entries(cart).filter(([, q]) => q > 0).map(([id, q]) => {
+    const m = MENU.find(x => x.id === id);
+    return `<div class="cart-item">
+      <span class="cart-item-name">${m.name[lang]}</span>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty('${id}',-1)">−</button>
+        <span class="qty-num">${q}</span>
+        <button class="qty-btn" onclick="changeQty('${id}',1)">+</button>
+      </div>
+      <span class="cart-item-price">${m.price * q}&nbsp;Kč</span>
+    </div>`;
+  }).join('');
+  const total = Object.entries(cart).reduce((s, [id, q]) => {
+    const m = MENU.find(x => x.id === id); return s + (m ? m.price * q : 0);
+  }, 0);
+  document.getElementById('cart-items').innerHTML = rows;
+  document.getElementById('cart-total-amount').textContent = total + ' Kč';
+  document.getElementById('cart-sub').textContent = i.tl + ': ' + getTableName();
+  document.getElementById('order-result').innerHTML = '';
+  document.getElementById('order-btn').disabled = false;
+  document.getElementById('order-btn').textContent = i.send;
+}
+
+function changeQty(id, delta) {
+  cart[id] = Math.max(0, (cart[id] || 0) + delta);
+  if (!cart[id]) delete cart[id];
+  if (!Object.keys(cart).length) document.getElementById('cart-overlay').classList.remove('open');
+  else renderCartSheet();
+  updateCartBar(); renderMenu();
+}
+
+async function sendOrder() {
+  const i = I18N[lang];
+  const btn = document.getElementById('order-btn');
+  btn.disabled = true; btn.textContent = '...';
+
+  const items = Object.entries(cart).filter(([, q]) => q > 0).map(([id, q]) => {
+    const m = MENU.find(x => x.id === id);
+    return { name: m.name.cs, qty: q, total: m.price * q };
+  });
+  const total = items.reduce((s, x) => s + x.total, 0);
+  const now = new Date();
+  const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+  const lines = items.map(x => `${x.qty}× ${x.name} — ${x.total} Kč`).join('\n');
+  const comment = document.getElementById('comment-input').value.trim();
+  const message = `🆕 Objednávka — ${getTableName()} (${getTableInternal()})\n─────────────────\n${lines}\n─────────────────\nCelkem: ${total} Kč\nČas: ${time}${comment ? '\nKomentář: ' + comment : ''}`;
+
+  try {
+    const res = await fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+    if (!res.ok) throw new Error('server error');
+    document.getElementById('order-result').innerHTML =
+      `<div class="order-success"><div class="order-success-title">${i.sent}</div><div class="order-success-sub">${i.sentSub}</div></div>`;
+    btn.textContent = i.sent;
+    cart = {};
+    updateCartBar(); renderMenu();
+    document.getElementById('comment-input').value = '';
+    setTimeout(() => document.getElementById('cart-overlay').classList.remove('open'), 2500);
+  } catch {
+    btn.disabled = false;
+    btn.textContent = i.send;
+    document.getElementById('order-result').innerHTML =
+      `<div style="color:rgba(255,100,80,0.8);font-size:13px;margin-bottom:12px;text-align:center">Chyba připojení, zkuste znovu</div>`;
+  }
+}
+
+function openDetail(id) {
+  detailItem = MENU.find(m => m.id === id);
+  if (!detailItem) return;
+  document.getElementById('d-name').textContent = detailItem.name[lang];
+  document.getElementById('d-desc').textContent = detailItem.desc[lang];
+  document.getElementById('d-price').textContent = detailItem.price + ' Kč';
+  document.getElementById('lbl-add').textContent = I18N[lang].add;
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function addFromDetail() {
+  if (!detailItem) return;
+  addItem(detailItem.id);
+  document.getElementById('detail-overlay').classList.remove('open');
+  detailItem = null;
+}
+
+document.getElementById('detail-overlay').addEventListener('click', function(e) {
+  if (e.target === this) { this.classList.remove('open'); detailItem = null; }
+});
+document.getElementById('cart-overlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+renderCats();
+renderMenu();
+</script>
+</body>
+</html>
