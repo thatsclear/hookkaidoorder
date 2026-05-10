@@ -303,7 +303,7 @@ const MENU = [
   // 7 — Káva
   {id:'c1',cat:7,name:{cs:'Cà Phê Phin (0.45l)',en:'Cà Phê Phin (0.45l)',ru:'Cà Phê Phin (0.45l)'},desc:{cs:'Vietnamská filtrovaná káva — horká nebo s ledem',en:'Vietnamese filter coffee — hot or iced',ru:'Вьетнамский фильтр-кофе — горячий или со льдом'},price:100},
 
-  // 8 — Dezerty (Macarons)
+  // 8 — Dezerty (Macarons) — free quantity, pair-discount pricing
   {id:'mac',cat:8,name:{cs:'Macarons',en:'Macarons',ru:'Макаруны'},desc:{cs:'1 ks za 95 Kč · 2 ks za 150 Kč',en:'1 pc for 95 Kč · 2 pcs for 150 Kč',ru:'1 шт — 95 Kč · 2 шт — 150 Kč'},
     flavours:[
       {id:'karamel',name:{cs:'Slaný karamel',en:'Salted caramel',ru:'Солёная карамель'}},
@@ -312,7 +312,7 @@ const MENU = [
       {id:'levandule',name:{cs:'Levandule',en:'Lavender',ru:'Лаванда'}},
       {id:'mango',name:{cs:'Mango & passion fruit',en:'Mango & passion fruit',ru:'Манго и маракуйя'}},
     ],
-    qtyOptions:[{qty:1,price:95},{qty:2,price:150}]},
+    qtyPricing:{single:95,pair:150}},
 
   // 9 — Pivo
   {id:'b0',cat:9,name:{cs:'Asahi Super Dry (0.33l)',en:'Asahi Super Dry (0.33l)',ru:'Asahi Super Dry (0.33l)'},desc:{cs:'Lehké suché japonské pivo',en:'Light dry Japanese beer',ru:'Лёгкое сухое японское пиво'},price:69},
@@ -358,17 +358,34 @@ const MENU = [
   {id:'h2',cat:13,name:{cs:'Repack',en:'Repack',ru:'Репак'},desc:{cs:'Výměna tabáku ve vaší dýmce',en:'Tobacco refill for your hookah',ru:'Замена табака в вашем кальяне'},price:200,restriction:'workandsmoke'},
 ];
 
-const SUBCAT_NAMES = {
+// For "Ostatní drinky" — full Czech style "Na ginu / Na vodce"
+const SUBCAT_NAMES_DRINKS = {
   gin:     {cs:'Na ginu',     en:'Gin-based',     ru:'На джине'},
   vodka:   {cs:'Na vodce',    en:'Vodka-based',   ru:'На водке'},
   rum:     {cs:'Na rumu',     en:'Rum-based',     ru:'На роме'},
   tequila: {cs:'Na tequile',  en:'Tequila-based', ru:'На текиле'},
   whisky:  {cs:'Na whisky',   en:'Whisky-based',  ru:'На виски'},
-  cognac:  {cs:'Koňak',       en:'Cognac',        ru:'Коньяк'},
-  other:   {cs:'Ostatní',     en:'Other',         ru:'Другое'},
-  tea:     {cs:'Čaje',        en:'Teas',          ru:'Чаи'},
+};
+// For "4cl Seppuku" — just neutral spirit name
+const SUBCAT_NAMES_SHOTS = {
+  vodka:   {cs:'Vodka',    en:'Vodka',    ru:'Водка'},
+  gin:     {cs:'Gin',      en:'Gin',      ru:'Джин'},
+  whisky:  {cs:'Whisky',   en:'Whisky',   ru:'Виски'},
+  tequila: {cs:'Tequila',  en:'Tequila',  ru:'Текила'},
+  cognac:  {cs:'Koňak',    en:'Cognac',   ru:'Коньяк'},
+  rum:     {cs:'Rum',      en:'Rum',      ru:'Ром'},
+  other:   {cs:'Ostatní',  en:'Other',    ru:'Другое'},
+};
+const SUBCAT_NAMES_TEA = {
+  tea:     {cs:'Čaje',     en:'Teas',     ru:'Чаи'},
   taiwan:  {cs:'Tchajwanské speciality',en:'Taiwanese specialties',ru:'Тайваньские спешелы'},
 };
+function subcatName(cat, sc) {
+  if (cat === 2)  return SUBCAT_NAMES_DRINKS[sc];
+  if (cat === 11) return SUBCAT_NAMES_SHOTS[sc];
+  if (cat === 3)  return SUBCAT_NAMES_TEA[sc];
+  return null;
+}
 const SUBCAT_ORDER_BY_CAT = {
   2:  ['gin','vodka','rum','tequila','whisky'],
   3:  ['tea','taiwan'],
@@ -382,7 +399,8 @@ let cart = [];
 let detailItem = null;
 let detailFlavour = null;
 let detailSize = null;
-let detailQty = null;
+let detailQty = null;        // for fixed qtyOptions (legacy)
+let detailFreeQty = 1;       // for qtyPricing (free-form counter)
 
 const params = new URLSearchParams(window.location.search);
 const tableKey = (params.get('stol') || 'obraz').toLowerCase().replace(/[\s-]/g, '');
@@ -459,9 +477,16 @@ function itemMinPrice(item) {
   if (item.price !== undefined) return item.price;
   if (item.sizes) return Math.min(...item.sizes.map(s => s.price));
   if (item.qtyOptions) return item.qtyOptions[0].price;
+  if (item.qtyPricing) return item.qtyPricing.single; // 1 ks
   return 0;
 }
-function itemHasOptions(item) { return !!(item.flavours || item.sizes || item.qtyOptions); }
+// Pair-discount price: pairs cost p.pair, leftover cost p.single
+function calcPairPrice(qty, p) {
+  const pairs = Math.floor(qty / 2);
+  const leftover = qty % 2;
+  return pairs * p.pair + leftover * p.single;
+}
+function itemHasOptions(item) { return !!(item.flavours || item.sizes || item.qtyOptions || item.qtyPricing); }
 function cartQuantityForItem(item) { return cart.filter(c => c.itemId === item.id).reduce((s, c) => s + c.qty, 0); }
 
 function itemRow(item, q) {
@@ -469,7 +494,7 @@ function itemRow(item, q) {
   const cartQty = cartQuantityForItem(item);
   const inCart = cartQty > 0;
   const minPrice = itemMinPrice(item);
-  const hasRange = item.sizes || item.qtyOptions;
+  const hasRange = item.sizes || item.qtyOptions || item.qtyPricing;
   const priceLabel = hasRange
     ? `<span class="item-price-from">${I18N[lang].from}</span>${minPrice}&nbsp;Kč`
     : `${minPrice}&nbsp;Kč`;
@@ -530,7 +555,8 @@ function renderMenu() {
     subOrder.forEach(sc => {
       const sub = items.filter(m => m.subcat === sc);
       if (!sub.length) return;
-      html += `<div class="subsection-title">${SUBCAT_NAMES[sc][lang]}</div>`;
+      const sn = subcatName(activeCat, sc);
+      html += `<div class="subsection-title">${sn ? sn[lang] : sc}</div>`;
       html += `<div class="items-list">${sub.map(m => itemRow(m, '')).join('')}</div>`;
     });
     const noSub = items.filter(m => !m.subcat);
@@ -575,6 +601,7 @@ function variantText(variant) {
   if (variant.flavour) parts.push(variant.flavour[lang]);
   if (variant.size) parts.push(variant.size[lang]);
   if (variant.qty) parts.push(variant.qty + '×');
+  if (variant.count) parts.push(variant.count + ' ks');
   return parts.join(' · ');
 }
 function renderCartSheet() {
@@ -606,14 +633,20 @@ function openDetail(id) {
   detailFlavour = null;
   detailSize = (detailItem.sizes && detailItem.sizes.length) ? detailItem.sizes[0] : null;
   detailQty = (detailItem.qtyOptions && detailItem.qtyOptions.length) ? detailItem.qtyOptions[0] : null;
+  detailFreeQty = 1;
   renderDetail();
   document.getElementById('detail-overlay').classList.add('open');
 }
 function selectFlavour(id) { detailFlavour = detailItem.flavours.find(f => f.id === id); renderDetail(); }
 function selectSize(idx) { detailSize = detailItem.sizes[idx]; renderDetail(); }
 function selectQty(idx) { detailQty = detailItem.qtyOptions[idx]; renderDetail(); }
+function changeFreeQty(delta) {
+  detailFreeQty = Math.max(1, Math.min(99, detailFreeQty + delta));
+  renderDetail();
+}
 function detailCurrentPrice() {
   if (!detailItem) return 0;
+  if (detailItem.qtyPricing) return calcPairPrice(detailFreeQty, detailItem.qtyPricing);
   if (detailQty) return detailQty.price;
   if (detailSize) return detailSize.price;
   return detailItem.price || 0;
@@ -669,6 +702,23 @@ function renderDetail() {
     });
     opts += `</div></div>`;
   }
+  if (it.qtyPricing) {
+    const fullPrice = detailFreeQty * it.qtyPricing.single;
+    const realPrice = calcPairPrice(detailFreeQty, it.qtyPricing);
+    const savings = fullPrice - realPrice;
+    const savingsLine = savings > 0
+      ? `<div class="opt-detail" style="color:var(--accent);font-weight:500;margin-top:6px">${ {cs:'Sleva',en:'Discount',ru:'Скидка'}[lang] }: −${savings} Kč</div>`
+      : '';
+    opts += `<div class="opt-group">
+      <div class="opt-label">${i.selectQty}</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:18px;background:var(--surface);border:0.5px solid var(--line);border-radius:10px;padding:14px">
+        <button class="qty-btn" onclick="changeFreeQty(-1)" ${detailFreeQty <= 1 ? 'disabled style="opacity:0.4"' : ''}>−</button>
+        <span style="font-size:22px;font-weight:600;min-width:30px;text-align:center">${detailFreeQty}</span>
+        <button class="qty-btn" onclick="changeFreeQty(1)">+</button>
+      </div>
+      ${savingsLine}
+    </div>`;
+  }
   document.getElementById('d-options').innerHTML = opts;
   document.getElementById('d-price').textContent = detailCurrentPrice() + ' Kč';
   const addBtn = document.getElementById('d-add');
@@ -682,7 +732,16 @@ function addFromDetail() {
   if (detailSize) variant.size = detailSize.label;
   if (detailQty) variant.qty = detailQty.qty;
   const v = Object.keys(variant).length ? variant : null;
-  addToCart(detailItem, v, detailCurrentPrice(), 1);
+
+  if (detailItem.qtyPricing) {
+    // Pair-discount: add as 1 line with the pre-discounted total as "price" and qty=1
+    // so the cart math stays consistent. Show "X ks" in variant text.
+    const totalPrice = calcPairPrice(detailFreeQty, detailItem.qtyPricing);
+    const variantWithCount = { ...(v || {}), count: detailFreeQty };
+    addToCart(detailItem, variantWithCount, totalPrice, 1);
+  } else {
+    addToCart(detailItem, v, detailCurrentPrice(), 1);
+  }
   document.getElementById('detail-overlay').classList.remove('open');
   detailItem = null;
 }
